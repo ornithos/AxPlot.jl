@@ -1,7 +1,7 @@
 module gmm
 
 using InferGMM
-
+export plot_gmm
 
 function plot_gmm(dGMM::GMM; figsize=(10,10), alpha=0.5, bins=50, fill=false, axs=nothing) where T <: AbstractFloat
     d, k = size(dGMM), ncomponents(dGMM)
