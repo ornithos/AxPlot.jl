@@ -1,6 +1,7 @@
 module gmm
 
 using InferGMM, Distributions
+using PyPlot
 import ..utils: gaussian_2D_level_curve_pts
 export plot_gmm
 
