@@ -9,6 +9,8 @@ function plot_gmm(dGMM::GMM; figsize=(10,10), alpha=0.5, bins=50, fill=false, ax
     d, k = size(dGMM), ncomponents(dGMM)
     (d > 20) && throw("will not plot for d > 20")
 
+    plottype = fill ? :fill : :plot
+    
     # d == 2 fits on a single axis: deal with this case first
     if d == 2
         if axs == nothing
@@ -25,7 +27,6 @@ function plot_gmm(dGMM::GMM; figsize=(10,10), alpha=0.5, bins=50, fill=false, ax
     if axs == nothing
         fig, axs = PyPlot.subplots(d, d, figsize=figsize)
     end
-    plottype = fill ? :fill : :plot
     rsmp = rand(dGMM, 5000)
 
     for ix = 1:d, iy = 1:d
