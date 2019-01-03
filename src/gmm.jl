@@ -10,7 +10,7 @@ function plot_gmm(dGMM::GMM; figsize=(10,10), alpha=0.5, bins=50, fill=false, ax
     (d > 20) && throw("will not plot for d > 20")
 
     plottype = fill ? :fill : :plot
-    
+
     # d == 2 fits on a single axis: deal with this case first
     if d == 2
         if axs == nothing
@@ -20,7 +20,7 @@ function plot_gmm(dGMM::GMM; figsize=(10,10), alpha=0.5, bins=50, fill=false, ax
             levcurv = gaussian_2D_level_curve_pts(dGMM.mus[j,:], dGMM.sigmas[:,:,j])
             axs[plottype](levcurv[:,1], levcurv[:,2], alpha=alpha*dGMM.pis[j]/maximum(dGMM.pis))
         end
-        return ax
+        return axs
     end
 
     # d > 2:
