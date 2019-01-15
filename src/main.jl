@@ -13,7 +13,8 @@ end
                                    Plotting zoo
  ==================================================================================#
 
-function pairplot(X::AbstractArray{T, 2}; figsize=(10,10), alpha=0.5, bins=50, axs=nothing, kwargs...) where T <: AbstractFloat
+function pairplot(X::AbstractArray{T, 2}; figsize=(10,10), alpha=0.5, bins=50,
+    axs=nothing, hvlines0=false, kwargs...) where T <: AbstractFloat
     n, d = size(X)
     (d > 20) && throw("will not plot for d > 20")
 
@@ -21,10 +22,11 @@ function pairplot(X::AbstractArray{T, 2}; figsize=(10,10), alpha=0.5, bins=50, a
     for ix = 1:d, iy = 1:d
         if ix != iy
             if alpha isa Number
-                axs[iy, ix][:scatter](X[:, ix], X[:, iy], alpha=alpha, kwargs...)
+                axs[iy, ix][:scatter](X[:, ix], X[:, iy], alpha=alpha; kwargs...)
             elseif alpha isa AbstractArray
-                scatter_alpha(X[:,ix], X[:,iy], alpha, ax=axs[iy,ix], kwargs...)
+                scatter_alpha(X[:,ix], X[:,iy], alpha, ax=axs[iy,ix]; kwargs...)
             end
+            hvlines0 && for s in [:axhline, :axvline]; axs[iy,ix][s](0, linestyle=":", color="grey"); end
         else
             axs[ix, iy][:hist](X[:, ix], bins=bins)
         end
@@ -49,11 +51,15 @@ function scatter_arrays(xs...)
 end
 
 
-function scatter_alpha(x1::Vector{T}, x2::Vector{T}, alpha::Vector{T2}; cmap_ix::Int=0, cmap::String="tab10",
-        rescale_alpha::Bool=true, ax=nothing) where T <: Real where T2 <: AbstractFloat
+function scatter_alpha(x1::Vector{T}, x2::Vector{T}, alpha::Vector{T2}; cmap_ix::Union{Int, Vector{T3}}=0, cmap::String="tab10",
+        rescale_alpha::Bool=true, ax=nothing) where T <: Real where T2 <: AbstractFloat where T3 <: Signed
     n = length(alpha)
     ax = something(ax, gca())
-    cols = repeat(collect(ColorMap(cmap)(cmap_ix))', n, 1)
+    if isa(cmap_ix, Signed)
+        cols = repeat(collect(ColorMap(cmap)(cmap_ix))', n, 1)
+    else
+        cols = ColorMap(cmap)(cmap_ix)
+    end
     rescale_alpha ? (alpha /= maximum(alpha)) : nothing
     cols[:,4] = alpha
     ax[:scatter](x1, x2, color=cols)
@@ -125,3 +131,7 @@ end
 
 x_lim_start_zero(ax) = x_lim_one_side(ax; s=0.)
 y_lim_start_zero(ax) = y_lim_one_side(ax; s=0.)
+
+
+rmaxislabel_y(ax::PyCall.PyObject) = ax[:tick_params](axis="y",which="both",left=false,labelleft=false)
+rmaxislabel_x(ax::PyCall.PyObject) = ax[:tick_params](axis="x",which="both",bottom=false,labelbottom=false)

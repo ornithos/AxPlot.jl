@@ -2,7 +2,7 @@ module utils
 
 using LinearAlgebra, PyPlot
 
-function gaussian_2D_level_curve_pts(mu::Array{Float64,1}, sigma::Array{Float64, 2}, alpha=2, ncoods=100)
+function gaussian_2D_level_curve_pts(mu::Array{Float64,1}, sigma::Array{Float64, 2}; alpha=2, ncoods=100)
     @assert size(mu) == (2,) "mu must be vector in R^2"
     @assert size(sigma) == (2, 2) "sigma must be 2x2 array"
 

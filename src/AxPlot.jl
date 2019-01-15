@@ -1,6 +1,7 @@
 module AxPlot
 
 using PyPlot
+using PyCall
 using LinearAlgebra
 using Flux: Tracker
 using Requires
