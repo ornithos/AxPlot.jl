@@ -22,13 +22,13 @@ function pairplot(X::AbstractArray{T, 2}; figsize=(10,10), alpha=0.5, bins=50,
     for ix = 1:d, iy = 1:d
         if ix != iy
             if alpha isa Number
-                axs[iy, ix][:scatter](X[:, ix], X[:, iy], alpha=alpha; kwargs...)
+                axs[iy, ix].scatter(X[:, ix], X[:, iy], alpha=alpha; kwargs...)
             elseif alpha isa AbstractArray
                 scatter_alpha(X[:,ix], X[:,iy], alpha, ax=axs[iy,ix]; kwargs...)
             end
-            hvlines0 && for s in [:axhline, :axvline]; axs[iy,ix][s](0, linestyle=":", color="grey"); end
+            hvlines0 && [x(0, linestyle=":", color="grey") for x in [axs[iy,ix].axhline, axs[iy,ix].axvline]];
         else
-            axs[ix, iy][:hist](X[:, ix], bins=bins)
+            axs[ix, iy].hist(X[:, ix], bins=bins)
         end
     end
     return axs
@@ -40,12 +40,12 @@ function scatter_arrays(xs...)
     sz = subplot_gridsize(n)
     f, axs = PyPlot.subplots(sz..., figsize=(5 + (sz[2]>1), sz[1]*3))
     if n == 1   # axs is not an array!
-        axs[:scatter](unpack_arr(xs[1])...)
+        axs.scatter(unpack_arr(xs[1])...)
         return
     else
         for i in eachindex(xs)
             ax = axs[i]; x = xs[i]
-            ax[:scatter](unpack_arr(x)...)
+            ax.scatter(unpack_arr(x)...)
         end
     end
 end
@@ -62,9 +62,35 @@ function scatter_alpha(x1::Vector{T}, x2::Vector{T}, alpha::Vector{T2}; cmap_ix:
     end
     rescale_alpha ? (alpha /= maximum(alpha)) : nothing
     cols[:,4] = alpha
-    ax[:scatter](x1, x2, color=cols)
+    ax.scatter(x1, x2, color=cols)
 end
 
+
+function hinton(matrix; max_weight=nothing, ax=gca())
+    """
+    Draw Hinton diagram for visualizing a weight matrix.
+    https://matplotlib.org/gallery/specialty_plots/hinton_demo.html
+    """
+
+    max_weight = something(max_weight, 2^ceil(log(maximum(abs.(matrix[:]))) / log(2)))
+
+    ax.patch.set_facecolor("gray")
+    ax.set_aspect("auto")  #("equal", "box")
+    ax.xaxis.set_major_locator(plt.NullLocator())
+    ax.yaxis.set_major_locator(plt.NullLocator())
+
+    for ix in CartesianIndices(matrix)
+        w = matrix[ix]
+        color = w > 0 ? "white" : "black"
+        sz = √(abs(w) / max_weight)
+        rect = plt.Rectangle([ix[1] - sz / 2, ix[2] - sz / 2], sz, sz,
+                             facecolor=color, edgecolor=color)
+        ax.add_patch(rect)
+    end
+
+    ax.autoscale_view()
+    ax.invert_yaxis()
+end
 
 
  #=================================================================================
@@ -84,11 +110,7 @@ function ax_lim_one_side(ax, xy; limstart=nothing, limend=nothing, type="constan
                           overriding current value with limstart/limend, "multiply"/"*"
                           and "add"/"+" also accepted which multiply/add curr. number.
     =#
-    if xy == "x"
-        lims = ax[:get_xlim]()
-    else
-        lims = ax[:get_ylim]()
-    end
+    lims = (xy == "x") ? ax.get_xlim() : ax.get_ylim()
     lims = collect(lims)  # make mutable (is tuple typed)
 
     if type == "m" || type == "multiply" || type == "*"
@@ -104,11 +126,8 @@ function ax_lim_one_side(ax, xy; limstart=nothing, limend=nothing, type="constan
     if limstart != nothing; lims[1] = f(lims[1], limstart); end
     if limend != nothing; lims[2] = f(lims[2], limend); end
 
-    if xy == "x"
-        ax[:set_xlim](lims)
-    else
-        ax[:set_ylim](lims)
-    end
+    (xy == "x") ? ax.set_xlim(lims) : ax.set_ylim(lims);
+
 end
 
 
@@ -133,5 +152,8 @@ x_lim_start_zero(ax) = x_lim_one_side(ax; s=0.)
 y_lim_start_zero(ax) = y_lim_one_side(ax; s=0.)
 
 
-rmaxislabel_y(ax::PyCall.PyObject) = ax[:tick_params](axis="y",which="both",left=false,labelleft=false)
-rmaxislabel_x(ax::PyCall.PyObject) = ax[:tick_params](axis="x",which="both",bottom=false,labelbottom=false)
+rmaxislabel_y(ax::PyCall.PyObject) = ax.tick_params(axis="y",which="both",left=false,labelleft=false)
+rmaxislabel_x(ax::PyCall.PyObject) = ax.tick_params(axis="x",which="both",bottom=false,labelbottom=false)
+
+
+@deprecate shiftedColorMap(cmap; start=0, midpoint=0.5, stop=1.0, name="shiftedcmap") AxPlot.utils.shiftedColorMap(cmap; start=0, midpoint=0.5, stop=1.0, name="shiftedcmap")
